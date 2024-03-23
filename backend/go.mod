@@ -1,4 +1,4 @@
-module voyager.com/backend
+module voyager-backend
 
 go 1.22.1
 
