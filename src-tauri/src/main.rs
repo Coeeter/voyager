@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use serde::{Deserialize, Serialize};
+use std::{fs::read_dir, io::ErrorKind};
 
 #[derive(Serialize, Deserialize)]
 struct DirContents {
@@ -13,40 +14,48 @@ struct DirContents {
 }
 
 #[tauri::command]
-fn get_dir_contents(dir_path: &str) -> Vec<DirContents> {
-    let mut contents: Vec<DirContents> = Vec::new();
-    let dir = std::fs::read_dir(dir_path).expect(&format!("Error reading directory: {}", dir_path));
-    for entry in dir {
-        let entry = match entry {
-            Ok(entry) => entry,
-            Err(_) => continue,
+fn get_dir_contents(dir_path: &str) -> Result<Vec<DirContents>, String> {
+    let mut contents = Vec::new();
+    let dir = match read_dir(dir_path) {
+        Ok(dir) => dir,
+        Err(err) => return Err(format!("Error reading directory: {}", err.to_string())),
+    };
+
+    for entry in dir.flat_map(|entry| match entry {
+        Ok(entry) => Some(entry),
+        Err(_) => None,
+    }) {
+        let metadata = match entry.metadata() {
+            Ok(metadata) => metadata,
+            Err(err) => {
+                if err.kind() == ErrorKind::NotFound {
+                    continue; // Skip missing files silently
+                } else {
+                    return Err(format!("Error getting file metadata: {}", err.to_string()));
+                }
+            }
         };
-        let metadata = entry
-            .metadata()
-            .expect(&format!("Error reading metadata for: {:?}", entry.path()));
+
+        let name = entry.file_name().into_string().unwrap();
         let is_dir = metadata.is_dir();
         let size = metadata.len();
-        let last_modified = match metadata.modified() {
-            Ok(time) => match time.elapsed() {
-                Ok(duration) => duration.as_secs(),
-                Err(_) => 0,
-            },
-            Err(_) => 0,
-        };
+        let last_modified = metadata.modified().unwrap().elapsed().unwrap().as_secs();
+
         let extension = match entry.path().extension() {
-            Some(ext) => ext.to_str().unwrap_or("").to_string(),
-            None => "".to_string(),
+            Some(ext) => ext.to_string_lossy().to_string(),
+            None => String::new(),
         };
-        let name = entry.file_name().into_string().unwrap_or("".to_string());
+
         contents.push(DirContents {
             name,
             is_dir,
             size,
             last_modified,
             extension,
-        })
+        });
     }
-    contents
+
+    Ok(contents)
 }
 
 fn main() {
