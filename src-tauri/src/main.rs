@@ -1,8 +1,9 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use opener;
 use serde::{Deserialize, Serialize};
-use std::{fs::read_dir, io::ErrorKind};
+use std::{fs::read_dir, io::ErrorKind, path::Path};
 
 #[derive(Serialize, Deserialize)]
 struct DirContents {
@@ -11,6 +12,7 @@ struct DirContents {
     size: u64,
     last_modified: u64,
     extension: String,
+    file_path: String,
 }
 
 #[tauri::command]
@@ -46,21 +48,33 @@ fn get_dir_contents(dir_path: &str) -> Result<Vec<DirContents>, String> {
             None => String::new(),
         };
 
+        let file_path = entry.path().to_string_lossy().to_string();
+
         contents.push(DirContents {
             name,
             is_dir,
             size,
             last_modified,
             extension,
+            file_path,
         });
     }
 
     Ok(contents)
 }
 
+#[tauri::command]
+fn open_file(file_path: &str) -> Result<(), String> {
+    let path = Path::new(file_path);
+    match opener::open(path) {
+        Ok(_) => Ok(()),
+        Err(err) => Err(format!("Error opening file: {}", err.to_string())),
+    }
+}
+
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![get_dir_contents])
+        .invoke_handler(tauri::generate_handler![get_dir_contents, open_file])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
