@@ -91,7 +91,7 @@ export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
   });
 
   return (
-    <Table ref={ref}>
+    <Table ref={ref} className="container mx-auto">
       <TableHeader>
         {table.getHeaderGroups().map(headerGroup => (
           <TableRow

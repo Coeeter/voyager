@@ -23,7 +23,7 @@ import { Separator } from './ui/separator';
 
 export const Toolbar = () => {
   return (
-    <menu className="flex h-16 gap-2 border border-b px-4 py-3">
+    <menu className="flex h-16 gap-2 border border-b border-t-0 px-4 py-3">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant={'secondary'}>

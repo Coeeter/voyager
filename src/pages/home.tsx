@@ -33,7 +33,7 @@ export const Home = () => {
   if (error) return <section className="p-6">Error: {error.message}</section>;
 
   return (
-    <section className="max-w-3xl">
+    <section>
       <FileTreeTable files={data ?? []} />
     </section>
   );
