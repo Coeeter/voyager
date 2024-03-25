@@ -3,7 +3,7 @@
 
 use opener;
 use serde::{Deserialize, Serialize};
-use std::{fs::read_dir, io::ErrorKind, path::Path};
+use std::{fs::read_dir, io::ErrorKind, os::windows::fs::MetadataExt, path::Path};
 
 #[derive(Serialize, Deserialize)]
 struct DirContents {
@@ -16,7 +16,10 @@ struct DirContents {
 }
 
 #[tauri::command]
-fn get_dir_contents(dir_path: &str) -> Result<Vec<DirContents>, String> {
+fn get_dir_contents(
+    dir_path: &str,
+    include_hidden: Option<bool>,
+) -> Result<Vec<DirContents>, String> {
     let mut contents = Vec::new();
     let dir = match read_dir(dir_path) {
         Ok(dir) => dir,
@@ -42,6 +45,18 @@ fn get_dir_contents(dir_path: &str) -> Result<Vec<DirContents>, String> {
         let is_dir = metadata.is_dir();
         let size = metadata.len();
         let last_modified = metadata.modified().unwrap().elapsed().unwrap().as_secs();
+
+        let file_attributes = metadata.file_attributes();
+
+        let include_hidden = match include_hidden {
+            Some(include_hidden) => include_hidden,
+            None => false,
+        };
+
+        // check if file is hidden
+        if file_attributes & 2 != 0 && !include_hidden {
+            continue;
+        }
 
         let extension = match entry.path().extension() {
             Some(ext) => ext.to_string_lossy().to_string(),

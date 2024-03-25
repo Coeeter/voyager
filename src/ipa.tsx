@@ -10,9 +10,13 @@ export type DirContents = {
 };
 
 export const getDirContents = async (
-  dirPath: string
+  dirPath: string,
+  includeHidden: boolean = false
 ): Promise<DirContents[]> => {
-  return await invoke('get_dir_contents', { dirPath })
+  return await invoke('get_dir_contents', {
+    dirPath,
+    includeHidden,
+  })
     .then(res => res as DirContents[])
     .then(res => {
       const dirs = res

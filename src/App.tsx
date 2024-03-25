@@ -6,7 +6,7 @@ function App() {
   return (
     <ThemeProvider defaultTheme="system">
       <Navbar />
-      <main>
+      <main className="h-[calc(100vh-130px)] overflow-auto">
         <Home />
       </main>
     </ThemeProvider>

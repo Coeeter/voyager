@@ -1,9 +1,8 @@
-import { Button } from '@/components/ui/button';
+import { FileTreeTable } from '@/components/file-tree-table';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAppStore } from '@/hooks/useAppStore';
 import { useDirContents } from '@/hooks/useDirContents';
-import { openFile } from '@/ipa';
 import { useEffect } from 'react';
-import { getIconForFile, getIconForFolder } from 'vscode-icons-js';
 
 export const Home = () => {
   const { filePath, setFilePath } = useAppStore();
@@ -18,39 +17,24 @@ export const Home = () => {
     }
   }, []);
 
-  if (isLoading) return <section className="p-6">Loading...</section>;
+  useEffect(() => {
+    document.querySelector('main')?.scrollTo(0, 0);
+  }, [filePath]);
+
+  if (isLoading)
+    return (
+      <section className="flex max-w-xl flex-col gap-3 p-6">
+        {Array.from({ length: 64 }).map((_, i) => (
+          <Skeleton key={i} className="h-10 w-full" />
+        ))}
+      </section>
+    );
 
   if (error) return <section className="p-6">Error: {error.message}</section>;
 
   return (
-    <section className="p-6">
-      <div className="flex flex-col gap-3">
-        {data?.map(file => (
-          <Button
-            key={file.name}
-            className="flex w-full max-w-xl items-center justify-start gap-2"
-            variant={'ghost'}
-            onClick={() => {
-              if (file.is_dir) {
-                setFilePath(file.file_path);
-                return;
-              }
-              openFile(file.file_path);
-            }}
-          >
-            <img
-              src={`/icons/${
-                file.is_dir ?
-                  getIconForFolder(file.name)
-                : getIconForFile(file.name)
-              }`}
-              alt={file.name}
-              className="size-6"
-            />
-            {file.name}
-          </Button>
-        ))}
-      </div>
+    <section className="max-w-3xl">
+      <FileTreeTable files={data ?? []} />
     </section>
   );
 };
