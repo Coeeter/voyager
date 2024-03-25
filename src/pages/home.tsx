@@ -12,7 +12,7 @@ export const Home = () => {
   });
 
   useEffect(() => {
-    if (!filePath) {
+    if (filePath === '/') {
       setFilePath('C:/users/nasru/');
     }
   }, []);

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 type AppStore = {
-  filePath: string | undefined;
+  filePath: string;
   setFilePath: (filePath: string) => void;
   sortType: 'Name' | 'Date' | 'Size' | 'Type';
   sortOrder: 'Ascending' | 'Descending';
@@ -10,7 +10,7 @@ type AppStore = {
 };
 
 export const useAppStore = create<AppStore>(set => ({
-  filePath: undefined,
+  filePath: 'C:/',
   setFilePath: filePath => set({ filePath }),
   sortType: 'Name',
   sortOrder: 'Ascending',

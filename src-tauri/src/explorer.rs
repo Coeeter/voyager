@@ -9,7 +9,6 @@ pub struct DirContents {
     size: u64,
     last_modified: u64,
     extension: String,
-    file_path: String,
 }
 
 #[tauri::command]
@@ -40,7 +39,6 @@ pub fn get_dir_contents(
         };
 
         let name = entry.file_name().into_string().unwrap();
-        let file_path = entry.path().to_string_lossy().to_string();
         let is_dir = metadata.is_dir();
         let size = metadata.len();
         let last_modified = metadata.modified().unwrap().elapsed().unwrap().as_secs();
@@ -65,7 +63,6 @@ pub fn get_dir_contents(
             size,
             last_modified,
             extension,
-            file_path,
         });
     }
 
