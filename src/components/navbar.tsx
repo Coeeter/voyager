@@ -5,7 +5,7 @@ import { Toolbar } from './toolbar';
 
 export const Navbar = () => {
   return (
-    <header className="sticky top-0 bg-background">
+    <header className="fixed top-0 z-10 w-full bg-background">
       <nav className="flex gap-2 border border-b px-4 py-3">
         <Button
           variant="ghost"
