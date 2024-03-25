@@ -1,10 +1,11 @@
 import { Button } from './ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Input } from './ui/input';
+import { Toolbar } from './toolbar';
 
 export const Navbar = () => {
   return (
-    <header>
+    <header className="sticky top-0 bg-background">
       <nav className="flex gap-2 border border-b px-4 py-3">
         <Button
           variant="ghost"
@@ -25,6 +26,7 @@ export const Navbar = () => {
           <Input placeholder="search" className="col-span-2" />
         </div>
       </nav>
+      <Toolbar />
     </header>
   );
 };
