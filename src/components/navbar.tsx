@@ -1,20 +1,16 @@
-import { Button } from './ui/button';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { Input } from './ui/input';
-import { Toolbar } from './toolbar';
 import { useAppStore } from '@/hooks/useAppStore';
-import React, { useState } from 'react';
-import { cn } from '@/lib/utils';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
+import React from 'react';
+import { Toolbar } from './toolbar';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
 
 //TODO: clean up component using refs and all
 export const Navbar = () => {
-  const [focus, setFocus] = useState(false);
-  const { filePath, setFilePath } = useAppStore();
-
-  const paths = filePath.split('/').filter(Boolean);
-
-  const pathsToDisplay =
-    paths.length > 4 ? paths.slice(paths.length - 3) : paths;
+  const paths = useAppStore(state => {
+    const paths = state.filePath.split('/').filter(Boolean);
+    return paths.length > 4 ? paths.slice(paths.length - 3) : paths;
+  });
 
   return (
     <header className="fixed top-0 z-10 w-full bg-background">
@@ -35,56 +31,21 @@ export const Navbar = () => {
         </Button>
         <div className="grid flex-1 grid-cols-5 gap-2">
           <div className="group relative col-span-3 flex items-center gap-3 rounded-md border border-border">
-            {pathsToDisplay.map((dir, i) => {
+            {paths.map((dir, i) => {
               return (
                 <React.Fragment key={i}>
-                  {i !== 0 && (
-                    <span className={cn('text-xs', focus && 'opacity-0')}>
-                      /
-                    </span>
-                  )}
+                  {i !== 0 && <span className={'text-xs'}>/</span>}
                   <Button
                     variant="ghost"
                     size="sm"
-                    className={cn(
-                      'relative z-20 text-xs',
-                      focus && 'opacity-0'
-                    )}
-                    onClick={() => {
-                      const index = paths.length > 4 ? paths.length - 3 + i : i;
-                      const newPath =
-                        paths.slice(0, index + 1).join('/') || '/';
-
-                      setFilePath(newPath);
-                    }}
+                    className={'relative z-20 text-xs hover:bg-background'}
+                    tabIndex={-1}
                   >
                     {dir}
                   </Button>
                 </React.Fragment>
               );
             })}
-            <form
-              onSubmit={e => {
-                e.preventDefault();
-                const form = e.target as HTMLFormElement;
-                const formData = new FormData(form);
-                const newPath = formData.get('path') as string;
-                setFilePath(newPath);
-                const input = document.querySelector(
-                  'input[name="path"]'
-                ) as HTMLInputElement;
-                input.blur();
-              }}
-            >
-              <Input
-                name="path"
-                placeholder="File Path"
-                className="absolute inset-0 opacity-0 focus:opacity-100"
-                defaultValue={filePath}
-                onFocus={() => setFocus(true)}
-                onBlur={() => setFocus(false)}
-              />
-            </form>
           </div>
           <Input placeholder="Search" className="col-span-2" />
         </div>
