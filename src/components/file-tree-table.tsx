@@ -148,6 +148,8 @@ export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
 
                 if (e.detail !== 2) return;
 
+                console.log(row.original.file_path);
+
                 row.original.is_dir ?
                   setFilePath(row.original.file_path)
                 : openFile(row.original.file_path);

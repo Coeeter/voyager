@@ -4,18 +4,20 @@ import { useAppStore } from '@/hooks/useAppStore';
 import { useDirContents } from '@/hooks/useDirContents';
 import { useEffect } from 'react';
 
-export const Home = () => {
+type HomeProps = {
+  startPath: string;
+};
+
+export const Home = ({ startPath }: HomeProps) => {
   const { filePath, setFilePath } = useAppStore();
 
   const { data, isLoading, error } = useDirContents({
-    dirPath: filePath || 'C:/users/nasru/',
+    dirPath: filePath,
   });
 
   useEffect(() => {
-    if (filePath === '/') {
-      setFilePath('C:/users/nasru/');
-    }
-  }, []);
+    setFilePath(startPath);
+  }, [startPath]);
 
   useEffect(() => {
     document.querySelector('main')?.scrollTo(0, 0);
@@ -23,7 +25,7 @@ export const Home = () => {
 
   if (isLoading)
     return (
-      <section className="flex max-w-xl flex-col gap-3 p-6">
+      <section className="container mx-auto">
         {Array.from({ length: 64 }).map((_, i) => (
           <Skeleton key={i} className="h-10 w-full" />
         ))}

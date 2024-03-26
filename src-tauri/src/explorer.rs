@@ -1,6 +1,10 @@
+use dirs::home_dir;
 use opener;
 use serde::{Deserialize, Serialize};
-use std::{fs::read_dir, io::ErrorKind, os::windows::fs::MetadataExt, path::Path};
+use std::{fs::read_dir, io::ErrorKind, path::Path};
+
+#[cfg(target_os = "windows")]
+use std::os::windows::fs::MetadataExt;
 
 #[derive(Serialize, Deserialize)]
 pub struct DirContents {
@@ -9,12 +13,23 @@ pub struct DirContents {
     size: u64,
     last_modified: u64,
     extension: String,
+    file_path: String,
+}
+
+#[tauri::command]
+pub fn get_starting_path() -> Result<String, String> {
+    let path = match home_dir() {
+        Some(path) => path,
+        None => return Err("Error getting home directory".to_string()),
+    };
+
+    Ok(path.to_string_lossy().to_string())
 }
 
 #[tauri::command]
 pub fn get_dir_contents(
     dir_path: &str,
-    include_hidden: Option<bool>,
+    _include_hidden: Option<bool>,
 ) -> Result<Vec<DirContents>, String> {
     let mut contents = Vec::new();
 
@@ -42,19 +57,22 @@ pub fn get_dir_contents(
         let is_dir = metadata.is_dir();
         let size = metadata.len();
         let last_modified = metadata.modified().unwrap().elapsed().unwrap().as_secs();
+        let file_path = entry.path().to_string_lossy().to_string();
         let extension = match entry.path().extension() {
             Some(ext) => ext.to_string_lossy().to_string(),
             None => String::new(),
         };
 
-        let include_hidden = match include_hidden {
-            Some(include_hidden) => include_hidden,
-            None => false,
-        };
-
-        // check if file is hidden
-        if metadata.file_attributes() & 2 != 0 && !include_hidden {
-            continue;
+        #[cfg(target_os = "windows")]
+        {
+            let include_hidden = match _include_hidden {
+                Some(include_hidden) => include_hidden,
+                None => false,
+            };
+            // check if file is hidden
+            if metadata.file_attributes() & 2 != 0 && !include_hidden {
+                continue;
+            }
         }
 
         contents.push(DirContents {
@@ -63,6 +81,7 @@ pub fn get_dir_contents(
             size,
             last_modified,
             extension,
+            file_path,
         });
     }
 

@@ -27,12 +27,6 @@ export const getDirContents = async (
         .sort((a, b) => a.name.localeCompare(b.name));
       return [...dirs, ...files];
     })
-    .then(res => {
-      return res.map(file => ({
-        ...file,
-        file_path: `${dirPath}${dirPath.endsWith('/') ? '' : '/'}${file.name}`,
-      }));
-    })
     .catch(err => {
       console.log(err);
       throw new Error(err);
@@ -44,4 +38,13 @@ export const openFile = async (filePath: string) => {
     console.log(err);
     throw new Error(err);
   });
+};
+
+export const getStartingPath = async (): Promise<string> => {
+  return await invoke('get_starting_path')
+    .then(path => path as string)
+    .catch(err => {
+      console.log(err);
+      throw new Error(err);
+    });
 };

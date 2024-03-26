@@ -10,7 +10,7 @@ type AppStore = {
 };
 
 export const useAppStore = create<AppStore>(set => ({
-  filePath: 'C:/',
+  filePath: '/',
   setFilePath: filePath => set({ filePath }),
   sortType: 'Name',
   sortOrder: 'Ascending',
