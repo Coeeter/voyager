@@ -2,14 +2,15 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod explorer;
-use explorer::{get_dir_contents, get_starting_path, open_file};
+use explorer::{get_dir_contents, get_system_paths, open_file};
 
 fn main() {
+    get_system_paths();
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             get_dir_contents,
             open_file,
-            get_starting_path
+            get_system_paths
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -40,9 +40,19 @@ export const openFile = async (filePath: string) => {
   });
 };
 
-export const getStartingPath = async (): Promise<string> => {
-  return await invoke('get_starting_path')
-    .then(path => path as string)
+type SystemPaths = {
+  home: string | undefined;
+  desktop: string | undefined;
+  documents: string | undefined;
+  downloads: string | undefined;
+  pictures: string | undefined;
+  music: string | undefined;
+  videos: string | undefined;
+};
+
+export const getSystemPaths = async (): Promise<SystemPaths> => {
+  return await invoke('get_system_paths')
+    .then(systemPaths => systemPaths as SystemPaths)
     .catch(err => {
       console.log(err);
       throw new Error(err);
