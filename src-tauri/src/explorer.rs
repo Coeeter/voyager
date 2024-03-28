@@ -57,39 +57,32 @@ pub fn get_dir_contents(
         Err(err) => return Err(format!("Error reading directory: {}", err.to_string())),
     };
 
-    let contents: Vec<DirContents> = if dir.count() > 20 {
-        concurrently_process_entries(dir_path, _include_hidden)
-    } else {
-        process_entries(dir_path, _include_hidden)
-    };
-
-    Ok(contents)
+    Ok(process_entries(dir_path, dir.count() > 20, _include_hidden))
 }
 
-fn process_entries(dir_path: &str, _include_hidden: Option<bool>) -> Vec<DirContents> {
+fn process_entries(
+    dir_path: &str,
+    concurrently: bool,
+    include_hidden: Option<bool>,
+) -> Vec<DirContents> {
     let dir = match read_dir(dir_path) {
         Ok(dir) => dir,
         Err(err) => panic!("Error reading directory: {}", err.to_string()),
     };
 
     let entries: Vec<DirEntry> = dir.filter_map(Result::ok).collect();
-    entries
-        .iter()
-        .map(|entry| process_entry(entry, _include_hidden))
-        .filter_map(|entry| entry)
-        .collect()
-}
 
-fn concurrently_process_entries(dir_path: &str, _include_hidden: Option<bool>) -> Vec<DirContents> {
-    let dir = match read_dir(dir_path) {
-        Ok(dir) => dir,
-        Err(err) => panic!("Error reading directory: {}", err.to_string()),
-    };
+    if concurrently {
+        return entries
+            .iter()
+            .map(|entry| process_entry(entry, include_hidden))
+            .filter_map(|entry| entry)
+            .collect();
+    }
 
-    let entries: Vec<DirEntry> = dir.filter_map(Result::ok).collect();
     entries
         .par_iter()
-        .map(|entry| process_entry(entry, _include_hidden))
+        .map(|entry| process_entry(entry, include_hidden))
         .filter_map(|entry| entry)
         .collect()
 }
