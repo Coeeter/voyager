@@ -4,7 +4,6 @@ use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use serde::{Deserialize, Serialize};
 use std::{
     fs::{read_dir, DirEntry},
-    io::ErrorKind,
     path::{Path, PathBuf},
 };
 
@@ -50,52 +49,40 @@ pub fn get_system_paths() -> SystemPaths {
 #[tauri::command]
 pub fn get_dir_contents(
     dir_path: &str,
-    _include_hidden: Option<bool>,
-) -> Result<Vec<DirContents>, String> {
-    let dir = match read_dir(dir_path) {
-        Ok(dir) => dir,
-        Err(err) => return Err(format!("Error reading directory: {}", err.to_string())),
-    };
-
-    Ok(process_entries(dir_path, dir.count() > 20, _include_hidden))
-}
-
-fn process_entries(
-    dir_path: &str,
-    concurrently: bool,
     include_hidden: Option<bool>,
-) -> Vec<DirContents> {
-    let dir = match read_dir(dir_path) {
-        Ok(dir) => dir,
-        Err(err) => panic!("Error reading directory: {}", err.to_string()),
-    };
+) -> Result<Vec<DirContents>, String> {
+    let dir = read_dir(dir_path)
+        .map_err(|err| format!("Error reading directory: {}", err.to_string()))?;
 
     let entries: Vec<DirEntry> = dir.filter_map(Result::ok).collect();
 
-    if concurrently {
-        return entries
-            .iter()
-            .map(|entry| process_entry(entry, include_hidden))
-            .filter_map(|entry| entry)
-            .collect();
-    }
+    let execute_concurrently = entries.len() > 20;
 
-    entries
-        .par_iter()
-        .map(|entry| process_entry(entry, include_hidden))
-        .filter_map(|entry| entry)
-        .collect()
+    let process_entry = |entry: &DirEntry| process_entry(entry, include_hidden);
+    let filter_map = |entry: Option<DirContents>| entry;
+
+    let dir_contents: Vec<DirContents> = if execute_concurrently {
+        entries
+            .par_iter()
+            .map(&process_entry)
+            .filter_map(&filter_map)
+            .collect()
+    } else {
+        entries
+            .iter()
+            .map(&process_entry)
+            .filter_map(&filter_map)
+            .collect()
+    };
+
+    Ok(dir_contents)
 }
 
 fn process_entry(entry: &DirEntry, _include_hidden: Option<bool>) -> Option<DirContents> {
     let metadata = match entry.metadata() {
         Ok(metadata) => metadata,
-        Err(err) => {
-            if err.kind() == ErrorKind::NotFound {
-                return None;
-            } else {
-                panic!("Error getting file metadata: {}", err.to_string());
-            }
+        Err(_) => {
+            return None;
         }
     };
 
