@@ -6,7 +6,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { FC, useRef, useState } from 'react';
+import { FC, useState } from 'react';
 import { getIconForFile, getIconForFolder } from 'vscode-icons-js';
 import {
   Table,
@@ -25,7 +25,6 @@ type FileTreeProps = {
 };
 
 export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
-  const ref = useRef<HTMLTableElement>(null);
   const [lastSelectedId, setLastSelectedId] = useState<string>('');
   const { setFilePath } = useAppStore();
 
@@ -86,7 +85,7 @@ export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  useOutsideClick(ref, () => {
+  const ref = useOutsideClick<HTMLTableElement>(() => {
     table.toggleAllPageRowsSelected(false);
   });
 
