@@ -27,7 +27,7 @@ export const Home = ({ startPath }: HomeProps) => {
     return (
       <section>
         {Array.from({ length: 64 }).map((_, i) => (
-          <Skeleton key={i} className="container mx-auto mb-1 h-10 w-full" />
+          <Skeleton key={i} className="container m-0 mb-1 h-10 w-full" />
         ))}
       </section>
     );

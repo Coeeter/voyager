@@ -90,12 +90,12 @@ export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
   });
 
   return (
-    <Table ref={ref} className="container mx-auto">
+    <Table ref={ref} className="container m-0">
       <TableHeader>
         {table.getHeaderGroups().map(headerGroup => (
           <TableRow
             key={headerGroup.id}
-            className="border border-t-0 border-border bg-background hover:bg-background"
+            className="border border-l-0 border-t-0 border-border bg-background hover:bg-background"
           >
             {headerGroup.headers.map(header => (
               <TableHead

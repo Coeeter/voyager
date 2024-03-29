@@ -40,7 +40,7 @@ export const openFile = async (filePath: string) => {
   });
 };
 
-type SystemPaths = {
+export type SystemPaths = {
   home: string | undefined;
   desktop: string | undefined;
   documents: string | undefined;
