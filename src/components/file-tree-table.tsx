@@ -26,7 +26,7 @@ type FileTreeProps = {
 
 export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
   const [lastSelectedId, setLastSelectedId] = useState<string>('');
-  const { setFilePath } = useAppStore();
+  const { navigate } = useAppStore();
 
   const columns: ColumnDef<DirContents>[] = [
     createSelectColumn(lastSelectedId, setLastSelectedId),
@@ -150,7 +150,7 @@ export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
                 console.log(row.original.file_path);
 
                 row.original.is_dir ?
-                  setFilePath(row.original.file_path)
+                  navigate(row.original.file_path)
                 : openFile(row.original.file_path);
               }}
               className="cursor-pointer border-none"

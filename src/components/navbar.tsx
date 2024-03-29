@@ -5,10 +5,16 @@ import { Toolbar } from './toolbar';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 
-//TODO: clean up component using refs and all
 export const Navbar = () => {
+  const { next, prev } = useAppStore(state => state.filePath);
+
+  const { goBack, goForward } = useAppStore(state => ({
+    goBack: state.goBack,
+    goForward: state.goForward,
+  }));
+
   const paths = useAppStore(state => {
-    const paths = state.filePath.split('/').filter(Boolean);
+    const paths = state.filePath.value.split('/').filter(Boolean);
     return paths.length > 4 ? paths.slice(paths.length - 3) : paths;
   });
 
@@ -19,6 +25,8 @@ export const Navbar = () => {
           variant="ghost"
           size="icon"
           className="aspect-square rounded-full"
+          disabled={!prev}
+          onClick={goBack}
         >
           <ArrowLeft className="size-5" />
         </Button>
@@ -26,6 +34,8 @@ export const Navbar = () => {
           variant="ghost"
           size="icon"
           className="aspect-square rounded-full"
+          disabled={!next}
+          onClick={goForward}
         >
           <ArrowRight className="size-5" />
         </Button>
