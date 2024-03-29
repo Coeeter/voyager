@@ -58,3 +58,21 @@ export const getSystemPaths = async (): Promise<SystemPaths> => {
       throw new Error(err);
     });
 };
+
+export const createFile = async (filePath: string): Promise<void> => {
+  return await invoke('create_file', { filePath })
+    .then(res => res as void)
+    .catch(err => {
+      console.log(err);
+      throw new Error(err);
+    });
+};
+
+export const createDir = async (dirPath: string): Promise<void> => {
+  return await invoke('create_dir', { dirPath })
+    .then(res => res as void)
+    .catch(err => {
+      console.log(err);
+      throw new Error(err);
+    });
+};
