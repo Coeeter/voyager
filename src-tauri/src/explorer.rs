@@ -3,7 +3,7 @@ use opener;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use serde::{Deserialize, Serialize};
 use std::{
-    fs::{read_dir, DirEntry},
+    fs::{create_dir as mkdir, read_dir, write, DirEntry},
     path::{Path, PathBuf},
 };
 
@@ -123,5 +123,23 @@ pub fn open_file(file_path: &str) -> Result<(), String> {
     match opener::open(path) {
         Ok(_) => Ok(()),
         Err(err) => Err(format!("Error opening file: {}", err.to_string())),
+    }
+}
+
+#[tauri::command]
+pub fn create_file(file_path: &str) -> Result<(), String> {
+    let path = Path::new(file_path);
+    match write(path, "") {
+        Ok(_) => Ok(()),
+        Err(err) => Err(format!("Error creating file: {}", err.to_string())),
+    }
+}
+
+#[tauri::command]
+pub fn create_dir(dir_path: &str) -> Result<(), String> {
+    let path = Path::new(dir_path);
+    match mkdir(path) {
+        Ok(_) => Ok(()),
+        Err(err) => Err(format!("Error creating directory: {}", err.to_string())),
     }
 }
