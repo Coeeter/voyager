@@ -143,5 +143,3 @@ pub fn create_dir(dir_path: &str) -> Result<(), String> {
         Err(err) => Err(format!("Error creating directory: {}", err.to_string())),
     }
 }
-
-
