@@ -24,7 +24,7 @@ export const SidebarLayout = ({ children, className }: SidebarProps) => {
         <Sidebar />
       </Panel>
       <PanelResizeHandle />
-      <Panel className="h-full !overflow-auto">{children}</Panel>
+      <Panel className="h-full !overflow-auto" id="main">{children}</Panel>
     </PanelGroup>
   );
 };

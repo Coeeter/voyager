@@ -20,7 +20,7 @@ export const Home = ({ startPath }: HomeProps) => {
   }, [startPath]);
 
   useEffect(() => {
-    document.querySelector('main')?.scrollTo(0, 0);
+    document.getElementById('main')?.scrollTo(0, 0);
   }, [filePath]);
 
   if (isLoading)

@@ -19,6 +19,7 @@ import {
   getRowRange,
 } from './ui/table';
 import { useOutsideClick } from '@/hooks/useOutsideClick';
+import { filesize } from 'filesize';
 
 type FileTreeProps = {
   files: DirContents[];
@@ -74,8 +75,7 @@ export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
     {
       accessorKey: 'size',
       header: 'Size',
-      accessorFn: file =>
-        file.is_dir ? '-' : Math.ceil(file.size / 1000).toString() + 'kb',
+      accessorFn: file => (file.is_dir ? '-' : filesize(file.size)),
     },
   ];
 
