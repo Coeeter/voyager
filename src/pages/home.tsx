@@ -1,26 +1,21 @@
 import { FileTreeTable } from '@/components/file-tree-table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAppStore } from '@/hooks/useAppStore';
+import { useCreateContent } from '@/hooks/useCreateContent';
 import { useDirContents } from '@/hooks/useDirContents';
 import { useEffect } from 'react';
 
-type HomeProps = {
-  startPath: string;
-};
-
-export const Home = ({ startPath }: HomeProps) => {
-  const { filePath, navigate } = useAppStore();
+export const Home = () => {
+  const filePath = useAppStore(state => state.filePath);
+  const { setParentFolder, setType } = useCreateContent();
 
   const { data, isLoading, error } = useDirContents({
     dirPath: filePath.value,
   });
 
   useEffect(() => {
-    navigate(startPath, true);
-  }, [startPath]);
-
-  useEffect(() => {
-    document.getElementById('main')?.scrollTo(0, 0);
+    setParentFolder(filePath.value);
+    setType(null);
   }, [filePath]);
 
   if (isLoading)

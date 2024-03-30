@@ -56,7 +56,7 @@ pub fn get_dir_contents(
 
     let entries: Vec<DirEntry> = dir.filter_map(Result::ok).collect();
 
-    let execute_concurrently = entries.len() > 20;
+    let execute_concurrently = entries.len() > 50;
 
     let process_entry = |entry: &DirEntry| process_entry(entry, include_hidden);
     let filter_map = |entry: Option<DirContents>| entry;

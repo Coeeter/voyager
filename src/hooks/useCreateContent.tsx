@@ -5,10 +5,10 @@ import { revalidateDirContents } from './useDirContents';
 
 type CreateContentStore = {
   type: 'file' | 'folder' | null;
-  filepath: string | null;
+  name: string | null;
   parentFolder: string | null;
-  setType: (type: 'file' | 'folder') => void;
-  setFilepath: (filepath: string) => void;
+  setType: (type: 'file' | 'folder' | null) => void;
+  setName: (name: string | null) => void;
   setParentFolder: (parentFolder: string) => void;
   submit: (queryClient: QueryClient) => void;
 };
@@ -16,21 +16,22 @@ type CreateContentStore = {
 export const useCreateContent = create<CreateContentStore>((set, get) => ({
   type: null,
   setType: type => set({ type }),
-  filepath: null,
-  setFilepath: filepath => set({ filepath }),
+  name: null,
+  setName: name => set({ name }),
   parentFolder: null,
   setParentFolder: parentFolder => set({ parentFolder }),
   submit: async queryClient => {
-    const { type, filepath, parentFolder } = get();
+    const { type, name, parentFolder } = get();
     try {
-      if (!type || !filepath) return;
+      if (!type || !name || !parentFolder) return;
+      const filepath = `${parentFolder}/${name}`;
       if (type === 'file') return await createFile(filepath);
       await createDir(filepath);
     } finally {
       if (parentFolder) revalidateDirContents(parentFolder, queryClient);
       set({
         type: null,
-        filepath: null,
+        name: null,
         parentFolder: null,
       });
     }

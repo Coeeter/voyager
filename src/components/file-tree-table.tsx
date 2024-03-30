@@ -6,7 +6,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { FC, useState } from 'react';
+import { FC, useEffect, useId, useState } from 'react';
 import { getIconForFile, getIconForFolder } from 'vscode-icons-js';
 import {
   Table,
@@ -20,6 +20,10 @@ import {
 } from './ui/table';
 import { useOutsideClick } from '@/hooks/useOutsideClick';
 import { filesize } from 'filesize';
+import { useCreateContent } from '@/hooks/useCreateContent';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
+import { useQueryClient } from '@tanstack/react-query';
 
 type FileTreeProps = {
   files: DirContents[];
@@ -28,6 +32,7 @@ type FileTreeProps = {
 export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
   const [lastSelectedId, setLastSelectedId] = useState<string>('');
   const { navigate } = useAppStore();
+  const { type } = useCreateContent();
 
   const columns: ColumnDef<DirContents>[] = [
     createSelectColumn(lastSelectedId, setLastSelectedId),
@@ -114,6 +119,7 @@ export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
         ))}
       </TableHeader>
       <TableBody>
+        {type && <CreateContentForm />}
         {table.getRowModel().rows?.length ?
           table.getRowModel().rows.map(row => (
             <TableRow
@@ -165,5 +171,45 @@ export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
         : undefined}
       </TableBody>
     </Table>
+  );
+};
+
+const CreateContentForm = () => {
+  const queryClient = useQueryClient();
+  const id = useId();
+  const { type, setName, submit, setType } = useCreateContent();
+
+  useEffect(() => {
+    document.getElementById(id)?.focus();
+  }, []);
+
+  const ref = useOutsideClick<HTMLTableRowElement>(() => {
+    setType(null);
+    setName(null);
+  });
+
+  return (
+    <TableRow ref={ref}>
+      <TableCell colSpan={5}>
+        <form
+          className="flex items-center gap-2"
+          onSubmit={async e => {
+            e.preventDefault();
+            const formdata = new FormData(e.currentTarget);
+            const name = formdata.get('name') as string;
+            setName(name);
+            submit(queryClient);
+          }}
+        >
+          <img
+            src={`/icons/default_${type}.svg`}
+            alt="Folder"
+            className="h-6 w-6"
+          />
+          <Input id={id} name="name" placeholder="Name" />
+          <Button variant="secondary">Create</Button>
+        </form>
+      </TableCell>
+    </TableRow>
   );
 };

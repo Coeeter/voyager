@@ -1,5 +1,5 @@
 import { useSystemPaths } from '@/hooks/useSystemPaths';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useRef } from 'react';
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels';
 import { Skeleton } from './ui/skeleton';
 import { Button } from './ui/button';
@@ -14,6 +14,15 @@ type SidebarProps = {
 };
 
 export const SidebarLayout = ({ children, className }: SidebarProps) => {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const filepath = useAppStore(state => state.filePath);
+
+  useEffect(() => {
+    if (!panelRef.current) return;
+    panelRef.current?.scrollTo(0, 0);
+  }, [filepath]);
+
   return (
     <PanelGroup
       autoSaveId="resizable"
@@ -24,7 +33,11 @@ export const SidebarLayout = ({ children, className }: SidebarProps) => {
         <Sidebar />
       </Panel>
       <PanelResizeHandle />
-      <Panel className="h-full !overflow-auto" id="main">{children}</Panel>
+      <Panel className="h-full">
+        <div ref={panelRef} className="h-full overflow-auto">
+          {children}
+        </div>
+      </Panel>
     </PanelGroup>
   );
 };

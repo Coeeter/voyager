@@ -20,8 +20,11 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { Separator } from './ui/separator';
+import { useCreateContent } from '@/hooks/useCreateContent';
 
 export const Toolbar = () => {
+  const { setType } = useCreateContent();
+
   return (
     <menu className="flex h-16 gap-2 border border-b border-t-0 px-4 py-3">
       <DropdownMenu>
@@ -32,11 +35,11 @@ export const Toolbar = () => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" sideOffset={12}>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setType('folder')}>
             <Folder className="mr-2 size-5" />
             Folder
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setType('file')}>
             <File className="mr-2 size-5" />
             File
           </DropdownMenuItem>
