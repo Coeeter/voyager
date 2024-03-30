@@ -23,12 +23,19 @@ import { Separator } from './ui/separator';
 import { useCreateContent } from '@/hooks/useCreateContent';
 
 export const Toolbar = () => {
-  const { setType } = useCreateContent();
+  const { setType, type } = useCreateContent();
 
   return (
     <menu className="flex h-16 gap-2 border border-b border-t-0 px-4 py-3">
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+        <DropdownMenuTrigger
+          asChild
+          onFocus={e => {
+            if (!type) return;
+            e.preventDefault();
+            document.getElementById('create-content-input')?.focus();
+          }}
+        >
           <Button variant={'secondary'}>
             <Plus className="mr-2 size-5" />
             New

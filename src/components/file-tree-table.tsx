@@ -6,7 +6,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { FC, useEffect, useId, useState } from 'react';
+import { FC, useCallback, useState } from 'react';
 import { getIconForFile, getIconForFolder } from 'vscode-icons-js';
 import {
   Table,
@@ -22,7 +22,6 @@ import { useOutsideClick } from '@/hooks/useOutsideClick';
 import { filesize } from 'filesize';
 import { useCreateContent } from '@/hooks/useCreateContent';
 import { Input } from './ui/input';
-import { Button } from './ui/button';
 import { useQueryClient } from '@tanstack/react-query';
 
 type FileTreeProps = {
@@ -176,17 +175,14 @@ export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
 
 const CreateContentForm = () => {
   const queryClient = useQueryClient();
-  const id = useId();
   const { type, setName, submit, setType } = useCreateContent();
 
-  useEffect(() => {
-    document.getElementById(id)?.focus();
-  }, []);
-
-  const ref = useOutsideClick<HTMLTableRowElement>(() => {
+  const reset = useCallback(() => {
     setType(null);
     setName(null);
-  });
+  }, [setType, setName]);
+
+  const ref = useOutsideClick<HTMLTableRowElement>(reset);
 
   return (
     <TableRow ref={ref}>
@@ -206,8 +202,12 @@ const CreateContentForm = () => {
             alt="Folder"
             className="h-6 w-6"
           />
-          <Input id={id} name="name" placeholder="Name" />
-          <Button variant="secondary">Create</Button>
+          <Input
+            id="create-content-input"
+            name="name"
+            placeholder="Name"
+            onBlur={reset}
+          />
         </form>
       </TableCell>
     </TableRow>
