@@ -10,7 +10,7 @@ type CreateContentStore = {
   setType: (type: 'file' | 'folder' | null) => void;
   setName: (name: string | null) => void;
   setParentFolder: (parentFolder: string) => void;
-  submit: (queryClient: QueryClient) => void;
+  submit: (queryClient: QueryClient) => Promise<void>;
 };
 
 export const useCreateContent = create<CreateContentStore>((set, get) => ({

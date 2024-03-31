@@ -194,7 +194,7 @@ const CreateContentForm = () => {
             const formdata = new FormData(e.currentTarget);
             const name = formdata.get('name') as string;
             setName(name);
-            submit(queryClient);
+            await submit(queryClient);
           }}
         >
           <img
