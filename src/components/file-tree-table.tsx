@@ -104,7 +104,7 @@ export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
             {headerGroup.headers.map(header => (
               <TableHead
                 key={header.id}
-                className="border border-t-0 border-border"
+                className="border border-l-0 border-t-0 border-border"
               >
                 {header.isPlaceholder ? null : (
                   flexRender(
