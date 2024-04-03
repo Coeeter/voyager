@@ -96,13 +96,21 @@ fn process_entry(entry: &DirEntry, _include_hidden: Option<bool>) -> Option<DirC
         None => String::new(),
     };
 
+    let include_hidden = match _include_hidden {
+        Some(include_hidden) => include_hidden,
+        None => false,
+    };
+
     #[cfg(target_os = "windows")]
     {
-        let include_hidden = match _include_hidden {
-            Some(include_hidden) => include_hidden,
-            None => false,
-        };
         if metadata.file_attributes() & 2 != 0 && !include_hidden {
+            return None;
+        }
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        if name.starts_with(".") && !include_hidden {
             return None;
         }
     }
