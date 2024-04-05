@@ -30,7 +30,7 @@ export const Home = () => {
   if (error) return <section className="p-6">Error: {error.message}</section>;
 
   return (
-    <section>
+    <section className="min-h-screen">
       <FileTreeTable files={data ?? []} />
     </section>
   );

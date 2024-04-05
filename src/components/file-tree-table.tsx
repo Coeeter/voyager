@@ -4,6 +4,8 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
+  Row,
+  Table as TableType,
   useReactTable,
 } from '@tanstack/react-table';
 import { FC, useCallback, useState } from 'react';
@@ -23,6 +25,17 @@ import { filesize } from 'filesize';
 import { useCreateContent } from '@/hooks/useCreateContent';
 import { Input } from './ui/input';
 import { useQueryClient } from '@tanstack/react-query';
+import {
+  DndContext,
+  MouseSensor,
+  PointerSensor,
+  TouchSensor,
+  useDraggable,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
+import { cn } from '@/lib/utils';
 
 type FileTreeProps = {
   files: DirContents[];
@@ -30,7 +43,6 @@ type FileTreeProps = {
 
 export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
   const [lastSelectedId, setLastSelectedId] = useState<string>('');
-  const { navigate } = useAppStore();
   const { type } = useCreateContent();
 
   const columns: ColumnDef<DirContents>[] = [
@@ -93,83 +105,146 @@ export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
     table.toggleAllPageRowsSelected(false);
   });
 
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      delay: 100,
+      distance: 8,
+    },
+  });
+
+  const pointerSensor = useSensor(PointerSensor, {
+    activationConstraint: {
+      delay: 100,
+      distance: 8,
+    },
+  });
+
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: {
+      delay: 100,
+      distance: 8,
+    },
+  });
+
+  const sensors = useSensors(mouseSensor, pointerSensor, touchSensor);
+
   return (
-    <Table ref={ref} className="container m-0">
-      <TableHeader>
-        {table.getHeaderGroups().map(headerGroup => (
-          <TableRow
-            key={headerGroup.id}
-            className="border border-l-0 border-t-0 border-border bg-background hover:bg-background"
-          >
-            {headerGroup.headers.map(header => (
-              <TableHead
-                key={header.id}
-                className="border border-l-0 border-t-0 border-border"
-              >
-                {header.isPlaceholder ? null : (
-                  flexRender(
-                    header.column.columnDef.header,
-                    header.getContext()
-                  )
-                )}
-              </TableHead>
-            ))}
-          </TableRow>
-        ))}
-      </TableHeader>
-      <TableBody>
-        {type && <CreateContentForm />}
-        {table.getRowModel().rows?.length ?
-          table.getRowModel().rows.map(row => (
+    <DndContext sensors={sensors}>
+      <Table ref={ref} className="container m-0">
+        <TableHeader>
+          {table.getHeaderGroups().map(headerGroup => (
             <TableRow
-              key={row.id}
-              data-state={row.getIsSelected() && 'selected'}
-              onClick={e => {
-                if (e.detail === 1) {
-                  if (!e.shiftKey) {
-                    let isSelected = row.getIsSelected();
-                    table.toggleAllRowsSelected(false);
-                    row.toggleSelected(!isSelected);
-                  }
-
-                  if (e.shiftKey) {
-                    const { rows, rowsById } = table.getRowModel();
-                    const rowsToToggle = getRowRange(
-                      rows,
-                      row.id,
-                      lastSelectedId
-                    );
-                    const isLastSelected =
-                      rowsById[lastSelectedId].getIsSelected();
-                    rowsToToggle.forEach(row =>
-                      row.toggleSelected(isLastSelected)
-                    );
-                  }
-
-                  setLastSelectedId(row.id);
-                  return;
-                }
-
-                if (e.detail !== 2) return;
-
-                console.log(row.original.file_path);
-
-                row.original.is_dir ?
-                  navigate(row.original.file_path)
-                : openFile(row.original.file_path);
-              }}
-              className="cursor-pointer border-none"
+              key={headerGroup.id}
+              className="border border-l-0 border-t-0 border-border bg-background hover:bg-background"
             >
-              {row.getVisibleCells().map(cell => (
-                <TableCell key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
+              {headerGroup.headers.map(header => (
+                <TableHead
+                  key={header.id}
+                  className="border border-l-0 border-t-0 border-border"
+                >
+                  {header.isPlaceholder ? null : (
+                    flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )
+                  )}
+                </TableHead>
               ))}
             </TableRow>
-          ))
-        : undefined}
-      </TableBody>
-    </Table>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {type && <CreateContentForm />}
+          {table.getRowModel().rows?.length ?
+            table
+              .getRowModel()
+              .rows.map(row => (
+                <FileItem
+                  key={row.id}
+                  table={table}
+                  row={row}
+                  lastSelectedId={lastSelectedId}
+                  setLastSelectedId={setLastSelectedId}
+                />
+              ))
+          : undefined}
+        </TableBody>
+      </Table>
+    </DndContext>
+  );
+};
+
+type FileItemProps = {
+  table: TableType<DirContents>;
+  row: Row<DirContents>;
+  lastSelectedId: string;
+  setLastSelectedId: (id: string) => void;
+};
+
+const FileItem = (props: FileItemProps) => {
+  const { table, row, lastSelectedId, setLastSelectedId } = props;
+  const { navigate } = useAppStore();
+  const { setNodeRef, attributes, listeners, transform, isDragging } =
+    useDraggable({
+      id: row.id,
+      data: row.original,
+    });
+
+  const onClick = useCallback(
+    (e: React.MouseEvent<HTMLTableRowElement, MouseEvent>) => {
+      if (e.detail === 1) {
+        if (!e.shiftKey) {
+          let isSelected = row.getIsSelected();
+          table.toggleAllRowsSelected(false);
+          row.toggleSelected(!isSelected);
+        }
+
+        if (e.shiftKey) {
+          const { rows, rowsById } = table.getRowModel();
+          const rowsToToggle = getRowRange(rows, row.id, lastSelectedId);
+          const isLastSelected = rowsById[lastSelectedId].getIsSelected();
+          rowsToToggle.forEach(row => row.toggleSelected(isLastSelected));
+        }
+
+        setLastSelectedId(row.id);
+        return;
+      }
+
+      if (e.detail !== 2) return;
+
+      console.log(row.original.file_path);
+
+      row.original.is_dir ?
+        navigate(row.original.file_path)
+      : openFile(row.original.file_path);
+    },
+    []
+  );
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+  };
+
+  return (
+    <TableRow
+      key={row.id}
+      style={style}
+      ref={setNodeRef}
+      onClick={onClick}
+      className={cn(
+        'cursor-pointer border-none',
+        isDragging && 'hover:bg-muted'
+      )}
+      data-state={row.getIsSelected() && 'selected'}
+      {...attributes}
+      {...listeners}
+    >
+      {row.getVisibleCells().map(cell => (
+        <TableCell key={cell.id}>
+          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        </TableCell>
+      ))}
+    </TableRow>
   );
 };
 
