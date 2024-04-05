@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     fs::{create_dir as mkdir, read_dir, write, DirEntry},
     path::{Path, PathBuf},
+    time::UNIX_EPOCH,
 };
 
 #[cfg(target_os = "windows")]
@@ -15,7 +16,7 @@ pub struct DirContents {
     name: String,
     is_dir: bool,
     size: u64,
-    last_modified: u64,
+    last_modified: u128,
     extension: String,
     file_path: String,
 }
@@ -89,7 +90,12 @@ fn process_entry(entry: &DirEntry, _include_hidden: Option<bool>) -> Option<DirC
     let name = entry.file_name().into_string().unwrap();
     let is_dir = metadata.is_dir();
     let size = metadata.len();
-    let last_modified = metadata.modified().unwrap().elapsed().unwrap().as_secs();
+    let last_modified = metadata
+        .modified()
+        .unwrap()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis();
     let file_path = entry.path().to_string_lossy().to_string();
     let extension = match entry.path().extension() {
         Some(ext) => ext.to_string_lossy().to_string(),
