@@ -1,5 +1,5 @@
 import { useAppStore } from '@/hooks/useAppStore';
-import { DirContents, openFile } from '@/ipa';
+import { DirContents, moveFile, openFile } from '@/ipa';
 import {
   ColumnDef,
   flexRender,
@@ -31,11 +31,13 @@ import {
   PointerSensor,
   TouchSensor,
   useDraggable,
+  useDroppable,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
+import { revalidateDirContents } from '@/hooks/useDirContents';
 
 type FileTreeProps = {
   files: DirContents[];
@@ -44,6 +46,8 @@ type FileTreeProps = {
 export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
   const [lastSelectedId, setLastSelectedId] = useState<string>('');
   const { type } = useCreateContent();
+  const { filePath } = useAppStore();
+  const queryClient = useQueryClient();
 
   const columns: ColumnDef<DirContents>[] = [
     createSelectColumn(lastSelectedId, setLastSelectedId),
@@ -129,7 +133,17 @@ export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
   const sensors = useSensors(mouseSensor, pointerSensor, touchSensor);
 
   return (
-    <DndContext sensors={sensors}>
+    <DndContext
+      sensors={sensors}
+      onDragEnd={async ({ active, over }) => {
+        const draggedElement = active.data.current as DirContents;
+        const directory = over?.data.current as DirContents;
+        const oldPath = draggedElement.file_path;
+        const newPath = `${directory.file_path}/${draggedElement.name}`;
+        await moveFile(oldPath, newPath);
+        revalidateDirContents(filePath.value, queryClient);
+      }}
+    >
       <Table ref={ref} className="container m-0">
         <TableHeader>
           {table.getHeaderGroups().map(headerGroup => (
@@ -184,11 +198,18 @@ type FileItemProps = {
 const FileItem = (props: FileItemProps) => {
   const { table, row, lastSelectedId, setLastSelectedId } = props;
   const { navigate } = useAppStore();
-  const { setNodeRef, attributes, listeners, transform, isDragging } =
+
+  const { setNodeRef, attributes, listeners, transform, active, isDragging } =
     useDraggable({
       id: row.id,
       data: row.original,
     });
+
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
+    id: row.id,
+    data: row.original,
+    disabled: !row.original.is_dir || isDragging,
+  });
 
   const onClick = useCallback(
     (e: React.MouseEvent<HTMLTableRowElement, MouseEvent>) => {
@@ -229,11 +250,18 @@ const FileItem = (props: FileItemProps) => {
     <TableRow
       key={row.id}
       style={style}
-      ref={setNodeRef}
+      ref={ref => {
+        if (row.original.is_dir) {
+          setDroppableRef(ref);
+        }
+        setNodeRef(ref);
+      }}
       onClick={onClick}
       className={cn(
-        'cursor-pointer border-none',
-        isDragging && 'hover:bg-muted'
+        'relative cursor-pointer border-none',
+        active && 'bg-background',
+        isDragging && 'z-[999] hover:bg-muted',
+        isOver && '-my-4 border-2 border-dashed border-primary bg-background'
       )}
       data-state={row.getIsSelected() && 'selected'}
       {...attributes}

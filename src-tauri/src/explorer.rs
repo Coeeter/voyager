@@ -3,7 +3,7 @@ use opener;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use serde::{Deserialize, Serialize};
 use std::{
-    fs::{create_dir as mkdir, read_dir, write, DirEntry},
+    fs::{create_dir as mkdir, read_dir, rename, write, DirEntry},
     path::{Path, PathBuf},
     time::UNIX_EPOCH,
 };
@@ -156,4 +156,11 @@ pub fn create_dir(dir_path: &str) -> Result<(), String> {
         Ok(_) => Ok(()),
         Err(err) => Err(format!("Error creating directory: {}", err.to_string())),
     }
+}
+
+#[tauri::command]
+pub fn move_file(old_path: &str, new_path: &str) -> Result<(), String> {
+    let path = Path::new(old_path);
+    let new_path = Path::new(new_path);
+    rename(path, new_path).map_err(|err| format!("Error moving file: {}", err.to_string()))
 }

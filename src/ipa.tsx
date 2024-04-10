@@ -76,3 +76,15 @@ export const createDir = async (dirPath: string): Promise<void> => {
       throw new Error(err);
     });
 };
+
+export const moveFile = async (
+  oldPath: string,
+  newPath: string
+): Promise<void> => {
+  return await invoke('move_file', { oldPath, newPath })
+    .then(res => res as void)
+    .catch(err => {
+      console.log(err);
+      throw new Error(err);
+    });
+};

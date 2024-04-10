@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod explorer;
-use explorer::{create_dir, create_file, get_dir_contents, get_system_paths, open_file};
+use explorer::{create_dir, create_file, get_dir_contents, get_system_paths, move_file, open_file};
 
 fn main() {
     get_system_paths();
@@ -12,7 +12,8 @@ fn main() {
             open_file,
             get_system_paths,
             create_dir,
-            create_file
+            create_file,
+            move_file,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
