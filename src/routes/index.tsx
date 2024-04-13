@@ -1,25 +1,22 @@
-import { Skeleton } from '@/components/ui/skeleton';
-import { useAppStore } from '@/hooks/useAppStore';
-import { useSystemPaths } from '@/hooks/useSystemPaths';
-import { Home } from '@/pages/home';
-import { createFileRoute } from '@tanstack/react-router';
-import { useEffect } from 'react';
+import { systemPathsQueryOptions } from '@/data/systemPathsQueryOptions';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { createFileRoute, useRouter } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/')({
+  loader: async ({ context: { queryClient } }) => {
+    return queryClient.ensureQueryData(systemPathsQueryOptions);
+  },
   component: () => {
-    const navigate = useAppStore(state => state.navigate);
-    const { data, error, isLoading } = useSystemPaths();
+    const router = useRouter();
+    const { data } = useSuspenseQuery(systemPathsQueryOptions);
 
-    useEffect(() => {
-      if (data?.home) navigate(data.home, true);
-    }, [data]);
+    if (!data || !data.home) {
+      return null;
+    }
 
-    return (
-      <main className="w-full">
-        {isLoading && <Skeleton className="h-10 w-full" />}
-        {error && <div>Error: {error.message}</div>}
-        {data && <Home />}
-      </main>
-    );
+    router.navigate({
+      to: '/$filepath',
+      params: { filepath: data.home },
+    });
   },
 });

@@ -1,4 +1,3 @@
-import { useAppStore } from '@/hooks/useAppStore';
 import { DirContents, moveFile, openFile } from '@/ipa';
 import {
   ColumnDef,
@@ -38,15 +37,18 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
 import { revalidateDirContents } from '@/hooks/useDirContents';
+import { useParams, useRouter } from '@tanstack/react-router';
 
 type FileTreeProps = {
   files: DirContents[];
 };
 
 export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
+  const { filepath } = useParams({
+    from: '/$filepath',
+  });
   const [lastSelectedId, setLastSelectedId] = useState<string>('');
   const { type } = useCreateContent();
-  const { filePath } = useAppStore();
   const queryClient = useQueryClient();
 
   const columns: ColumnDef<DirContents>[] = [
@@ -141,7 +143,7 @@ export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
         const oldPath = draggedElement.file_path;
         const newPath = `${directory.file_path}/${draggedElement.name}`;
         await moveFile(oldPath, newPath);
-        revalidateDirContents(filePath.value, queryClient);
+        revalidateDirContents(filepath, queryClient);
       }}
     >
       <Table ref={ref} className="container m-0">
@@ -196,8 +198,8 @@ type FileItemProps = {
 };
 
 const FileItem = (props: FileItemProps) => {
+  const router = useRouter();
   const { table, row, lastSelectedId, setLastSelectedId } = props;
-  const { navigate } = useAppStore();
 
   const { setNodeRef, attributes, listeners, transform, active, isDragging } =
     useDraggable({
@@ -236,7 +238,12 @@ const FileItem = (props: FileItemProps) => {
       console.log(row.original.file_path);
 
       row.original.is_dir ?
-        navigate(row.original.file_path)
+        router.navigate({
+          to: '/$filepath',
+          params: {
+            filepath: row.original.file_path,
+          },
+        })
       : openFile(row.original.file_path);
     },
     []
