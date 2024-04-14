@@ -4,8 +4,10 @@ import React from 'react';
 import { Toolbar } from './toolbar';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { useRouter } from '@tanstack/react-router';
 
 export const Navbar = () => {
+  const { history } = useRouter();
   const { next, prev } = useAppStore(state => state.filePath);
 
   const { goBack, goForward } = useAppStore(state => ({
@@ -26,7 +28,10 @@ export const Navbar = () => {
           size="icon"
           className="aspect-square rounded-full"
           disabled={!prev}
-          onClick={goBack}
+          onClick={() => {
+            goBack();
+            history.back();
+          }}
         >
           <ArrowLeft className="size-5" />
         </Button>
@@ -35,7 +40,10 @@ export const Navbar = () => {
           size="icon"
           className="aspect-square rounded-full"
           disabled={!next}
-          onClick={goForward}
+          onClick={() => {
+            goForward();
+            history.forward();
+          }}
         >
           <ArrowRight className="size-5" />
         </Button>

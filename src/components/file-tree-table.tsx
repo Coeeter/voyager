@@ -7,7 +7,7 @@ import {
   Table as TableType,
   useReactTable,
 } from '@tanstack/react-table';
-import { FC, useCallback, useState } from 'react';
+import { FC, ReactNode, useCallback, useState } from 'react';
 import { getIconForFile, getIconForFolder } from 'vscode-icons-js';
 import {
   Table,
@@ -37,19 +37,16 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
 import { revalidateDirContents } from '@/hooks/useDirContents';
-import { useParams, useRouter } from '@tanstack/react-router';
+import { useParams, useRouteContext, useRouter } from '@tanstack/react-router';
+import { useAppStore } from '@/hooks/useAppStore';
 
 type FileTreeProps = {
   files: DirContents[];
 };
 
 export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
-  const { filepath } = useParams({
-    from: '/$filepath',
-  });
-  const [lastSelectedId, setLastSelectedId] = useState<string>('');
+  const [lastSelectedId, setLastSelectedId] = useState('');
   const { type } = useCreateContent();
-  const queryClient = useQueryClient();
 
   const columns: ColumnDef<DirContents>[] = [
     createSelectColumn(lastSelectedId, setLastSelectedId),
@@ -111,41 +108,8 @@ export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
     table.toggleAllPageRowsSelected(false);
   });
 
-  const mouseSensor = useSensor(MouseSensor, {
-    activationConstraint: {
-      delay: 100,
-      distance: 8,
-    },
-  });
-
-  const pointerSensor = useSensor(PointerSensor, {
-    activationConstraint: {
-      delay: 100,
-      distance: 8,
-    },
-  });
-
-  const touchSensor = useSensor(TouchSensor, {
-    activationConstraint: {
-      delay: 100,
-      distance: 8,
-    },
-  });
-
-  const sensors = useSensors(mouseSensor, pointerSensor, touchSensor);
-
   return (
-    <DndContext
-      sensors={sensors}
-      onDragEnd={async ({ active, over }) => {
-        const draggedElement = active.data.current as DirContents;
-        const directory = over?.data.current as DirContents;
-        const oldPath = draggedElement.file_path;
-        const newPath = `${directory.file_path}/${draggedElement.name}`;
-        await moveFile(oldPath, newPath);
-        revalidateDirContents(filepath, queryClient);
-      }}
-    >
+    <DraggableContext>
       <Table ref={ref} className="container m-0">
         <TableHeader>
           {table.getHeaderGroups().map(headerGroup => (
@@ -186,6 +150,54 @@ export const FileTreeTable: FC<FileTreeProps> = ({ files }) => {
           : undefined}
         </TableBody>
       </Table>
+    </DraggableContext>
+  );
+};
+
+const DraggableContext = ({ children }: { children: ReactNode }) => {
+  const { queryClient } = useRouteContext({
+    from: '/$filepath',
+  });
+  const { filepath } = useParams({
+    from: '/$filepath',
+  });
+
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      delay: 100,
+      distance: 8,
+    },
+  });
+
+  const pointerSensor = useSensor(PointerSensor, {
+    activationConstraint: {
+      delay: 100,
+      distance: 8,
+    },
+  });
+
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: {
+      delay: 100,
+      distance: 8,
+    },
+  });
+
+  const sensors = useSensors(mouseSensor, pointerSensor, touchSensor);
+
+  return (
+    <DndContext
+      sensors={sensors}
+      onDragEnd={async ({ active, over }) => {
+        const draggedElement = active.data.current as DirContents;
+        const directory = over?.data.current as DirContents;
+        const oldPath = draggedElement.file_path;
+        const newPath = `${directory.file_path}/${draggedElement.name}`;
+        await moveFile(oldPath, newPath);
+        revalidateDirContents(filepath, queryClient);
+      }}
+    >
+      {children}
     </DndContext>
   );
 };
@@ -199,6 +211,7 @@ type FileItemProps = {
 
 const FileItem = (props: FileItemProps) => {
   const router = useRouter();
+  const navigate = useAppStore(state => state.navigate);
   const { table, row, lastSelectedId, setLastSelectedId } = props;
 
   const { setNodeRef, attributes, listeners, transform, active, isDragging } =
@@ -213,41 +226,39 @@ const FileItem = (props: FileItemProps) => {
     disabled: !row.original.is_dir || isDragging,
   });
 
-  const onClick = useCallback(
-    (e: React.MouseEvent<HTMLTableRowElement, MouseEvent>) => {
-      if (e.detail === 1) {
-        if (!e.shiftKey) {
-          let isSelected = row.getIsSelected();
-          table.toggleAllRowsSelected(false);
-          row.toggleSelected(!isSelected);
-        }
-
-        if (e.shiftKey) {
-          const { rows, rowsById } = table.getRowModel();
-          const rowsToToggle = getRowRange(rows, row.id, lastSelectedId);
-          const isLastSelected = rowsById[lastSelectedId].getIsSelected();
-          rowsToToggle.forEach(row => row.toggleSelected(isLastSelected));
-        }
-
-        setLastSelectedId(row.id);
-        return;
+  const onClick = (e: React.MouseEvent<HTMLTableRowElement, MouseEvent>) => {
+    if (e.detail === 1) {
+      if (!e.shiftKey) {
+        let isSelected = row.getIsSelected();
+        table.toggleAllRowsSelected(false);
+        row.toggleSelected(!isSelected);
       }
 
-      if (e.detail !== 2) return;
+      if (e.shiftKey) {
+        const { rows, rowsById } = table.getRowModel();
+        const rowsToToggle = getRowRange(rows, row.id, lastSelectedId);
+        const isLastSelected = rowsById[lastSelectedId].getIsSelected();
+        rowsToToggle.forEach(row => row.toggleSelected(isLastSelected));
+      }
 
-      console.log(row.original.file_path);
+      setLastSelectedId(row.id);
+      return;
+    }
 
-      row.original.is_dir ?
-        router.navigate({
-          to: '/$filepath',
-          params: {
-            filepath: row.original.file_path,
-          },
-        })
-      : openFile(row.original.file_path);
-    },
-    []
-  );
+    if (e.detail !== 2) return;
+
+    table.toggleAllRowsSelected(false);
+
+    if (!row.original.is_dir) return openFile(row.original.file_path);
+
+    router.navigate({
+      to: '/$filepath',
+      params: {
+        filepath: row.original.file_path,
+      },
+    });
+    navigate(row.original.file_path);
+  };
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -255,7 +266,7 @@ const FileItem = (props: FileItemProps) => {
 
   return (
     <TableRow
-      key={row.id}
+      key={row.original.file_path}
       style={style}
       ref={ref => {
         if (row.original.is_dir) {
