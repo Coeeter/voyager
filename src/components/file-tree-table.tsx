@@ -226,30 +226,31 @@ const FileItem = (props: FileItemProps) => {
     disabled: !row.original.is_dir || isDragging,
   });
 
-  const onClick = (e: React.MouseEvent<HTMLTableRowElement, MouseEvent>) => {
-    if (e.detail === 1) {
-      if (!e.shiftKey) {
-        let isSelected = row.getIsSelected();
-        table.toggleAllRowsSelected(false);
-        row.toggleSelected(!isSelected);
-      }
-
-      if (e.shiftKey) {
-        const { rows, rowsById } = table.getRowModel();
-        const rowsToToggle = getRowRange(rows, row.id, lastSelectedId);
-        const isLastSelected = rowsById[lastSelectedId].getIsSelected();
-        rowsToToggle.forEach(row => row.toggleSelected(isLastSelected));
-      }
-
-      setLastSelectedId(row.id);
-      return;
+  const onSingleClick = (
+    e: React.MouseEvent<HTMLTableRowElement, MouseEvent>
+  ) => {
+    if (!e.shiftKey) {
+      let isSelected = row.getIsSelected();
+      table.toggleAllRowsSelected(false);
+      row.toggleSelected(!isSelected);
     }
 
-    if (e.detail !== 2) return;
+    if (e.shiftKey) {
+      const { rows, rowsById } = table.getRowModel();
+      const rowsToToggle = getRowRange(rows, row.id, lastSelectedId);
+      const isLastSelected = rowsById[lastSelectedId].getIsSelected();
+      rowsToToggle.forEach(row => row.toggleSelected(isLastSelected));
+    }
 
+    setLastSelectedId(row.id);
+  };
+
+  const onDoubleClick = () => {
     table.toggleAllRowsSelected(false);
 
     if (!row.original.is_dir) return openFile(row.original.file_path);
+
+    navigate(row.original.file_path);
 
     router.navigate({
       to: '/$filepath',
@@ -257,7 +258,11 @@ const FileItem = (props: FileItemProps) => {
         filepath: row.original.file_path,
       },
     });
-    navigate(row.original.file_path);
+  };
+
+  const onClick = (e: React.MouseEvent<HTMLTableRowElement, MouseEvent>) => {
+    if (e.detail === 1) return onSingleClick(e);
+    if (e.detail === 2) return onDoubleClick();
   };
 
   const style = {

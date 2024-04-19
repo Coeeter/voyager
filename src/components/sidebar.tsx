@@ -7,6 +7,7 @@ import { SystemPaths } from '@/ipa';
 import { getIconForFolder } from 'vscode-icons-js';
 import { useAppStore } from '@/hooks/useAppStore';
 import { cn } from '@/lib/utils';
+import { useRouter } from '@tanstack/react-router';
 
 type SidebarProps = {
   children?: ReactNode;
@@ -45,6 +46,7 @@ export const SidebarLayout = ({ children, className }: SidebarProps) => {
 const Sidebar = () => {
   const { value } = useAppStore(state => state.filePath);
   const navigate = useAppStore(state => state.navigate);
+  const router = useRouter();
   const { isLoading, data, error } = useSystemPaths();
 
   return (
@@ -65,7 +67,16 @@ const Sidebar = () => {
                 className={cn('w-full justify-start rounded-none capitalize', {
                   'bg-background': value !== path,
                 })}
-                onClick={navigate.bind(null, path, false)}
+                onClick={() => {
+                  navigate(path);
+
+                  router.navigate({
+                    to: '/$filepath',
+                    params: {
+                      filepath: path,
+                    },
+                  });
+                }}
                 variant={'secondary'}
               >
                 <img
