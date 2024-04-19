@@ -7,20 +7,22 @@ export const Route = createFileRoute('/')({
   loader: async ({ context: { queryClient } }) => {
     return queryClient.ensureQueryData(systemPathsQueryOptions);
   },
-  component: () => {
-    const router = useRouter();
-    const navigate = useAppStore(state => state.navigate);
-    const { data } = useSuspenseQuery(systemPathsQueryOptions);
-
-    if (!data || !data.home) {
-      return null;
-    }
-
-    navigate(data.home, true);
-
-    router.navigate({
-      to: '/$filepath',
-      params: { filepath: data.home },
-    });
-  },
+  component: RedirectRootComponent,
 });
+
+function RedirectRootComponent() {
+  const router = useRouter();
+  const navigate = useAppStore(state => state.navigate);
+  const { data } = useSuspenseQuery(systemPathsQueryOptions);
+
+  if (!data || !data.home) {
+    return null;
+  }
+
+  navigate(data.home, true);
+
+  router.navigate({
+    to: '/$filepath',
+    params: { filepath: data.home },
+  });
+}
