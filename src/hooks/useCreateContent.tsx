@@ -20,7 +20,7 @@ export const useCreateContent = create<CreateContentStore>((set, get) => ({
   parentFolder: null,
   submit: async queryClient => {
     const { type, name } = get();
-    const parentFolder = useHistory().currentNode.filePath;
+    const parentFolder = useHistory.getState().currentNode.filePath;
     try {
       if (!type || !name || !parentFolder) return;
       const filepath = `${parentFolder}/${name}`;
