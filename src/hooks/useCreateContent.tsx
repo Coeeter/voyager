@@ -1,8 +1,8 @@
 import { createDir, createFile } from '@/ipa';
 import { QueryClient } from '@tanstack/react-query';
 import { create } from 'zustand';
-import { useAppStore } from './useAppStore';
 import { dirContentsQueryOptions } from '@/data/dirContentsQueryOptions';
+import { useHistory } from './useHistory';
 
 type CreateContentStore = {
   type: 'file' | 'folder' | null;
@@ -20,7 +20,7 @@ export const useCreateContent = create<CreateContentStore>((set, get) => ({
   parentFolder: null,
   submit: async queryClient => {
     const { type, name } = get();
-    const parentFolder = useAppStore.getState().filePath.value;
+    const parentFolder = useHistory().currentNode.filePath;
     try {
       if (!type || !name || !parentFolder) return;
       const filepath = `${parentFolder}/${name}`;

@@ -37,8 +37,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
 import { useParams, useRouteContext, useRouter } from '@tanstack/react-router';
-import { useAppStore } from '@/hooks/useAppStore';
 import { dirContentsQueryOptions } from '@/data/dirContentsQueryOptions';
+import { useNavigateToFilepath } from '@/hooks/useNavigateToFilepath';
 
 type FileTreeProps = {
   files: DirContents[];
@@ -210,8 +210,7 @@ type FileItemProps = {
 };
 
 const FileItem = (props: FileItemProps) => {
-  const router = useRouter();
-  const navigate = useAppStore(state => state.navigate);
+  const navigate = useNavigateToFilepath();
   const { table, row, lastSelectedId, setLastSelectedId } = props;
 
   const { setNodeRef, attributes, listeners, transform, active, isDragging } =
@@ -251,13 +250,6 @@ const FileItem = (props: FileItemProps) => {
     if (!row.original.is_dir) return openFile(row.original.file_path);
 
     navigate(row.original.file_path);
-
-    router.navigate({
-      to: '/$filepath',
-      params: {
-        filepath: row.original.file_path,
-      },
-    });
   };
 
   const onClick = (e: React.MouseEvent<HTMLTableRowElement, MouseEvent>) => {

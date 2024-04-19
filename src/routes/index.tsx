@@ -1,7 +1,7 @@
 import { systemPathsQueryOptions } from '@/data/systemPathsQueryOptions';
-import { useAppStore } from '@/hooks/useAppStore';
+import { useNavigateToFilepath } from '@/hooks/useNavigateToFilepath';
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { createFileRoute, useRouter } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/')({
   loader: async ({ context: { queryClient } }) => {
@@ -11,8 +11,7 @@ export const Route = createFileRoute('/')({
 });
 
 function RedirectRootComponent() {
-  const router = useRouter();
-  const navigate = useAppStore(state => state.navigate);
+  const navigate = useNavigateToFilepath();
   const { data } = useSuspenseQuery(systemPathsQueryOptions);
 
   if (!data || !data.home) {
@@ -20,9 +19,4 @@ function RedirectRootComponent() {
   }
 
   navigate(data.home, true);
-
-  router.navigate({
-    to: '/$filepath',
-    params: { filepath: data.home },
-  });
 }

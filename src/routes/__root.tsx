@@ -1,8 +1,9 @@
-import { Navbar } from '@/components/navbar';
-import { SidebarLayout } from '@/components/sidebar';
 import { systemPathsQueryOptions } from '@/data/systemPathsQueryOptions';
 import { QueryClient } from '@tanstack/react-query';
-import { createRootRouteWithContext, Outlet } from '@tanstack/react-router';
+import { createRootRouteWithContext } from '@tanstack/react-router';
+import { Navbar } from '@/components/navbar';
+import { SidebarLayout } from '@/components/sidebar';
+import { Outlet } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 
 export const Route = createRootRouteWithContext<{
@@ -14,7 +15,7 @@ export const Route = createRootRouteWithContext<{
   component: RootRouteComponent,
 });
 
-function RootRouteComponent() {
+export function RootRouteComponent() {
   return (
     <>
       <Navbar />

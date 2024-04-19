@@ -3,11 +3,11 @@ import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels';
 import { Button } from './ui/button';
 import { SystemPaths } from '@/ipa';
 import { getIconForFolder } from 'vscode-icons-js';
-import { useAppStore } from '@/hooks/useAppStore';
 import { cn } from '@/lib/utils';
-import { useRouter } from '@tanstack/react-router';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { systemPathsQueryOptions } from '@/data/systemPathsQueryOptions';
+import { useNavigateToFilepath } from '@/hooks/useNavigateToFilepath';
+import { useHistory } from '@/hooks/useHistory';
 
 type SidebarProps = {
   children?: ReactNode;
@@ -16,8 +16,7 @@ type SidebarProps = {
 
 export const SidebarLayout = ({ children, className }: SidebarProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
-
-  const filepath = useAppStore(state => state.filePath);
+  const filepath = useHistory(state => state.currentNode.filePath);
 
   useEffect(() => {
     if (!panelRef.current) return;
@@ -44,9 +43,8 @@ export const SidebarLayout = ({ children, className }: SidebarProps) => {
 };
 
 const Sidebar = () => {
-  const { value } = useAppStore(state => state.filePath);
-  const navigate = useAppStore(state => state.navigate);
-  const router = useRouter();
+  const navigate = useNavigateToFilepath();
+  const filepath = useHistory(state => state.currentNode.filePath);
   const { data } = useSuspenseQuery(systemPathsQueryOptions);
 
   return (
@@ -61,18 +59,9 @@ const Sidebar = () => {
           <Button
             key={key}
             className={cn('w-full justify-start rounded-none capitalize', {
-              'bg-background': value !== path,
+              'bg-background': filepath !== path,
             })}
-            onClick={() => {
-              navigate(path);
-
-              router.navigate({
-                to: '/$filepath',
-                params: {
-                  filepath: path,
-                },
-              });
-            }}
+            onClick={() => navigate(path)}
             variant={'secondary'}
           >
             <img

@@ -1,6 +1,6 @@
 import { FileTreeTable } from '@/components/file-tree-table';
 import { dirContentsQueryOptions } from '@/data/dirContentsQueryOptions';
-import { useAppStore } from '@/hooks/useAppStore';
+import { useHistory } from '@/hooks/useHistory';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect } from 'react';
@@ -19,15 +19,19 @@ export const Route = createFileRoute('/$filepath')({
 });
 
 function FilepathComponent() {
-  const { filepath } = Route.useParams();
-  const { data } = useSuspenseQuery(dirContentsQueryOptions(filepath));
-  const { navigate, filePath: filePathFromState } = useAppStore();
+  const params = Route.useParams();
+
+  const dirContentsQuery = useSuspenseQuery(
+    dirContentsQueryOptions(params.filepath)
+  );
+
+  const updateHistory = useHistory(state => state.updateHistory);
+  const currentHistoryNode = useHistory(state => state.currentNode);
 
   useEffect(() => {
-    if (!filepath) return;
-    if (filePathFromState?.value === filepath) return;
-    navigate(filepath, true);
-  }, [filepath]);
+    if (currentHistoryNode.filePath === params.filepath) return;
+    updateHistory(params.filepath, true);
+  }, [params.filepath]);
 
-  return <FileTreeTable files={data} />;
+  return <FileTreeTable files={dirContentsQuery.data} />;
 }
