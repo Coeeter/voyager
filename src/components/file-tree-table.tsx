@@ -36,9 +36,9 @@ import {
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
-import { revalidateDirContents } from '@/hooks/useDirContents';
 import { useParams, useRouteContext, useRouter } from '@tanstack/react-router';
 import { useAppStore } from '@/hooks/useAppStore';
+import { dirContentsQueryOptions } from '@/data/dirContentsQueryOptions';
 
 type FileTreeProps = {
   files: DirContents[];
@@ -194,7 +194,7 @@ const DraggableContext = ({ children }: { children: ReactNode }) => {
         const oldPath = draggedElement.file_path;
         const newPath = `${directory.file_path}/${draggedElement.name}`;
         await moveFile(oldPath, newPath);
-        revalidateDirContents(filepath, queryClient);
+        queryClient.invalidateQueries(dirContentsQueryOptions(filepath));
       }}
     >
       {children}
@@ -300,6 +300,7 @@ const FileItem = (props: FileItemProps) => {
 };
 
 const CreateContentForm = () => {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { type, setName, submit, setType } = useCreateContent();
 
@@ -321,6 +322,7 @@ const CreateContentForm = () => {
             const name = formdata.get('name') as string;
             setName(name);
             await submit(queryClient);
+            router.invalidate();
           }}
         >
           <img
